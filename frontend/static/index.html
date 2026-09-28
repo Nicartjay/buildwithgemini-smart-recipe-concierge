@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Recipe Concierge</title>
+
+<!-- Modern Typography & Icons -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+
+<style>
+  :root {
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: #e0e7ff;
+    --accent: #10b981;
+    --accent-light: #d1fae5;
+    --warning: #f59e0b;
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --bg-card-hover: #334155;
+    --border: #334155;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    --drawer-width: 440px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* --- Navigation / Header --- */
+  header {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.35rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #34d399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .brand-icon {
+    font-size: 1.8rem;
+    color: var(--primary);
+    -webkit-text-fill-color: initial;
+  }
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .btn-concierge-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%);
+    color: #fff;
+    border: none;
+    padding: 0.65rem 1.25rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.92rem;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    transition: all 0.2s ease;
+  }
+  .btn-concierge-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+  }
+
+  /* --- App Layout --- */
+  .app-container {
+    display: flex;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  main {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1300px;
+    margin: 0 auto;
+    width: 100%;
+    transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  .filter-chip {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 0.5rem 1.1rem;
+    border-radius: 9999px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+  .filter-chip:hover, .filter-chip.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  /* --- Recipe Showcase Grid --- */
+  .recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 2rem;
+  }
+  .recipe-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  .recipe-card:hover {
+    transform: translateY(-4px);
+    border-color: #475569;
+  }
+
+  /* Hero Image & AI Trigger */
+  .card-media {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    background: #090d16;
+    overflow: hidden;
+  }
+  .card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .recipe-card:hover .card-media img {
+    transform: scale(1.03);
+  }
+  .ai-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+    padding: 1.5rem;
+    text-align: center;
+  }
+  .btn-gen-ai-img {
+    background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1.1rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35);
+    transition: transform 0.2s ease;
+  }
+  .btn-gen-ai-img:hover {
+    transform: scale(1.04);
+  }
+
+  .card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    flex: 1;
+  }
+
+  .card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .recipe-tags {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .tag.vegan { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+  .tag.keto { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+  .tag.protein { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+
+  .recipe-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .recipe-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* Metadata & Macros Widget */
+  .meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  /* Macro Nutrients Widget */
+  .macros-widget {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .macros-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .macros-bars {
+    display: flex;
+    gap: 0.75rem;
+  }
+  .macro-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .macro-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+  .macro-bar-bg {
+    height: 6px;
+    background: #334155;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .macro-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+  }
+  .fill-protein { background: #818cf8; }
+  .fill-carbs { background: #34d399; }
+  .fill-fats { background: #fbbf24; }
+
+  /* Ingredients & Dynamic Scaler */
+  .ingredients-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .ingredients-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ingredients-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Dynamic Scaler Component */
+  .scaler-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #0f172a;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.2rem 0.5rem;
+  }
+  .btn-scale {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 700;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.15s ease;
+  }
+  .btn-scale:hover {
+    background: var(--bg-card-hover);
+  }
+  .servings-count {
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-width: 75px;
+    text-align: center;
+    color: var(--primary-light);
+  }
+
+  .ingredient-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .ingredient-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    padding: 0.45rem 0.65rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  .ingredient-name {
+    color: var(--text-primary);
+  }
+  .ingredient-amount {
+    font-weight: 600;
+    color: #a5b4fc;
+  }
+
+  /* Contextual AI Substitute Trigger Button */
+  .btn-ai-sub {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: #818cf8;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 0.5rem;
+    transition: all 0.2s ease;
+  }
+  .btn-ai-sub:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  /* --- Collapsible Side Drawer / Concierge Chat --- */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 45;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .drawer-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .concierge-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: var(--drawer-width);
+    max-width: 100vw;
+    background: var(--bg-card);
+    border-left: 1px solid var(--border);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .concierge-drawer.open {
+    transform: translateX(0);
+  }
+
+  .drawer-header {
+    padding: 1.1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(15, 23, 42, 0.8);
+  }
+  .drawer-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .drawer-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: #34d399;
+    background: rgba(52, 211, 153, 0.1);
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+  }
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 8px #34d399;
+  }
+  .btn-close-drawer {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem;
+    border-radius: 6px;
+  }
+  .btn-close-drawer:hover {
+    color: var(--text-primary);
+    background: var(--border);
+  }
+
+  /* Chat Output Area */
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .msg {
+    display: flex;
+    flex-direction: column;
+    max-width: 92%;
+  }
+  .msg.user {
+    align-self: flex-end;
+  }
+  .msg.agent {
+    align-self: flex-start;
+  }
+  .bubble {
+    padding: 0.8rem 1.1rem;
+    border-radius: 16px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .msg.user .bubble {
+    background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .msg.agent .bubble {
+    background: #0f172a;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-bottom-left-radius: 4px;
+  }
+  .bubble.rich {
+    background: transparent;
+    border: none;
+    padding: 0;
+    max-width: 100%;
+    box-shadow: none;
+    white-space: normal;
+  }
+
+  /* Memory Hub Pill Container */
+  .memory-hub {
+    padding: 0.75rem 1.25rem;
+    background: rgba(15, 23, 42, 0.9);
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .memory-hub-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .memory-pills {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .memory-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    background: rgba(99, 102, 241, 0.15);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .memory-pill:hover {
+    background: rgba(99, 102, 241, 0.3);
+    color: #fff;
+  }
+  .memory-pill.active {
+    background: var(--primary);
+    color: #fff;
+  }
+  .btn-add-memory {
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+  .btn-add-memory:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  /* Drawer Footer Input */
+  .drawer-footer {
+    padding: 1rem 1.25rem;
+    background: rgba(15, 23, 42, 0.95);
+    border-top: 1px solid var(--border);
+  }
+  form#form {
+    display: flex;
+    gap: 0.5rem;
+  }
+  form input#input {
+    flex: 1;
+    background: #0f172a;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.92rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+  form input#input:focus {
+    border-color: var(--primary);
+  }
+  form button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+  }
+  form button:hover {
+    background: var(--primary-hover);
+  }
+
+  /* --- A2UI Mini-Renderer Components --- */
+  .a2card {
+    background: #0f172a;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.1rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    width: 100%;
+  }
+  .a2card + .a2card, .a2col > .a2card { margin-top: 0.6rem; }
+  .a2col { display: flex; flex-direction: column; gap: 0.5rem; }
+  .a2row { display: flex; flex-direction: row; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+  .a2row.between { justify-content: space-between; }
+  .a2text { margin: 0; line-height: 1.4; color: var(--text-primary); }
+  .a2text.a2-h1 { font-size: 1.4rem; font-weight: 700; color: #fff; }
+  .a2text.a2-h2 { font-size: 1.2rem; font-weight: 700; color: #fff; }
+  .a2text.a2-h3 { font-size: 1.05rem; font-weight: 600; color: #a5b4fc; }
+  .a2text.a2-h4 { font-size: 0.95rem; font-weight: 600; }
+  .a2text.a2-caption { font-size: 0.82rem; color: var(--text-muted); }
+  .a2divider { border: none; border-top: 1px solid var(--border); margin: 0.5rem 0; width: 100%; }
+  .a2img { max-width: 100%; border-radius: 10px; display: block; }
+  .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-size: 1.2rem; line-height: 1; vertical-align: middle; color: var(--primary); }
+</style>
+</head>
+<body>
+
+<!-- Header Navigation -->
+<header>
+  <div class="brand">
+    <span class="material-symbols-outlined brand-icon">restaurant_menu</span>
+    <span>Smart Recipe Concierge</span>
+  </div>
+  <div class="nav-actions">
+    <button class="btn-concierge-toggle" id="btnToggleConcierge">
+      <span class="material-symbols-outlined">auto_awesome</span>
+      <span>AI Concierge</span>
+    </button>
+  </div>
+</header>
+
+<div class="app-container">
+  <!-- Main Showcase Area -->
+  <main>
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <button class="filter-chip active">All Recipes</button>
+      <button class="filter-chip">🌱 Vegan</button>
+      <button class="filter-chip">🥑 Keto</button>
+      <button class="filter-chip">💪 High Protein</button>
+      <button class="filter-chip">⏱️ Under 30 mins</button>
+    </div>
+
+    <!-- Recipe Showcase Grid -->
+    <div class="recipe-grid">
+
+      <!-- Recipe Card 1 -->
+      <div class="recipe-card" data-recipe-id="recipe-001" data-base-servings="4">
+        <div class="card-media">
+          <img src="images/quinoa_med_bowl.png" alt="Mediterranean Quinoa Bowl">
+        </div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="recipe-tags">
+              <span class="tag vegan">Vegan</span>
+              <span class="tag protein">High Fiber</span>
+            </div>
+            <h2 class="recipe-title">Mediterranean Quinoa Power Bowl</h2>
+            <p class="recipe-desc">Fluffy quinoa topped with creamy avocado, crisp cucumbers, cherry tomatoes, olives, and tangy feta.</p>
+          </div>
+
+          <!-- Metadata Row -->
+          <div class="meta-row">
+            <div class="meta-item">
+              <span class="material-symbols-outlined">timer</span>
+              <span>20 mins</span>
+            </div>
+            <div class="meta-item">
+              <span class="material-symbols-outlined">local_fire_department</span>
+              <span class="calorie-display" data-base-cal="380">380 kcal / serving</span>
+            </div>
+          </div>
+
+          <!-- Macros Widget -->
+          <div class="macros-widget">
+            <div class="macros-header">
+              <span>Macronutrient Profile</span>
+              <span>380 kcal</span>
+            </div>
+            <div class="macros-bars">
+              <div class="macro-item">
+                <div class="macro-label"><span>Protein</span><span>14g</span></div>
+                <div class="macro-bar-bg"><div class="macro-bar-fill fill-protein" style="width: 45%;"></div></div>
+              </div>
+              <div class="macro-item">
+                <div class="macro-label"><span>Carbs</span><span>48g</span></div>
+                <div class="macro-bar-bg"><div class="macro-bar-fill fill-carbs" style="width: 65%;"></div></div>
+              </div>
+              <div class="macro-item">
+                <div class="macro-label"><span>Fats</span><span>16g</span></div>
+                <div class="macro-bar-bg"><div class="macro-bar-fill fill-fats" style="width: 50%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ingredients & Dynamic Scaler -->
+          <div class="ingredients-section">
+            <div class="ingredients-header">
+              <span class="ingredients-title">Ingredients</span>
+              <!-- Interactive Serving Scaler -->
+              <div class="scaler-control">
+                <button class="btn-scale btn-minus" title="Decrease Servings">-</button>
+                <span class="servings-count">4 Servings</span>
+                <button class="btn-scale btn-plus" title="Increase Servings">+</button>
+              </div>
+            </div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item">
+                <span class="ingredient-name">Cooked Quinoa</span>
+                <div>
+                  <span class="ingredient-amount" data-base-qty="2" data-unit="cups">2 cups</span>
+                  <button class="btn-ai-sub" onclick="triggerAiSub('Cooked Quinoa', 'Mediterranean Quinoa Power Bowl')">🪄 AI Sub</button>
+                </div>
+              </li>
+              <li class="ingredient-item">
+                <span class="ingredient-name">Ripe Avocado (diced)</span>
+                <div>
+                  <span class="ingredient-amount" data-base-qty="1" data-unit="whole">1 whole</span>
+                  <button class="btn-ai-sub" onclick="triggerAiSub('Ripe Avocado', 'Mediterranean Quinoa Power Bowl')">🪄 AI Sub</button>
+                </div>
+              </li>
+              <li class="ingredient-item">
+                <span class="ingredient-name">Cherry Tomatoes (halved)</span>
+                <div>
+                  <span class="ingredient-amount" data-base-qty="1" data-unit="cup">1 cup</span>
+                  <button class="btn-ai-sub" onclick="triggerAiSub('Cherry Tomatoes', 'Mediterranean Quinoa Power Bowl')">🪄 AI Sub</button>
+                </div>
+              </li>
+              <li class="ingredient-item">
+                <span class="ingredient-name">Kalamata Olives</span>
+                <div>
+                  <span class="ingredient-amount" data-base-qty="0.5" data-unit="cup">0.5 cup</span>
+                  <button class="btn-ai-sub" onclick="triggerAiSub('Kalamata Olives', 'Mediterranean Quinoa Power Bowl')">🪄 AI Sub</button>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recipe Card 2 -->
+      <div class="recipe-card" data-recipe-id="recipe-002" data-base-servings="2">
+        <div class="card-media">
+          <img src="images/tuscan_chicken.png" alt="Tuscan Garlic Chicken">
+        </div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="recipe-tags">
+              <span class="tag keto">Keto</span>
+              <span class="tag protein">High Protein</span>
+            </div>
+            <h2 class="recipe-title">Creamy Tuscan Garlic Chicken</h2>
+            <p class="recipe-desc">Tender chicken breast seared to perfection in a rich garlic, spinach, and sun-dried tomato cream sauce.</p>
+          </div>
+
+          <!-- Metadata Row -->
+          <div class="meta-row">
+            <div class="meta-item">
+              <span class="material-symbols-outlined">timer</span>
+              <span>25 mins</span>
+            </div>
+            <div class="meta-item">
+              <span class="material-symbols-outlined">local_fire_department</span>
+              <span class="calorie-display" data-base-cal="520">520 kcal / serving</span>
+            </div>
+          </div>
+
+          <!-- Macros Widget -->
+          <div class="macros-widget">
+            <div class="macros-header">
+              <span>Macronutrient Profile</span>
+              <span>520 kcal</span>
+            </div>
+            <div class="macros-bars">
+              <div class="macro-item">
+                <div class="macro-label"><span>Protein</span><span>42g</span></div>
+                <div class="macro-bar-bg"><div class="macro-bar-fill fill-protein" style="width: 85%;"></div></div>
+              </div>
+              <div class="macro-item">
+                <div class="macro-label"><span>Carbs</span><span>8g</span></div>
+                <div class="macro-bar-bg"><div class="macro-bar-fill fill-carbs" style="width: 20%;"></div></div>
+              </div>
+              <div class="macro-item">
+                <div class="macro-label"><span>Fats</span><span>34g</span></div>
+                <div class="macro-bar-bg"><div class="macro-bar-fill fill-fats" style="width: 75%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ingredients & Dynamic Scaler -->
+          <div class="ingredients-section">
+            <div class="ingredients-header">
+              <span class="ingredients-title">Ingredients</span>
+              <div class="scaler-control">
+                <button class="btn-scale btn-minus" title="Decrease Servings">-</button>
+                <span class="servings-count">2 Servings</span>
+                <button class="btn-scale btn-plus" title="Increase Servings">+</button>
+              </div>
+            </div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item">
+                <span class="ingredient-name">Boneless Chicken Breast</span>
+                <div>
+                  <span class="ingredient-amount" data-base-qty="2" data-unit="lbs">2 lbs</span>
+                  <button class="btn-ai-sub" onclick="triggerAiSub('Boneless Chicken Breast', 'Creamy Tuscan Garlic Chicken')">🪄 AI Sub</button>
+                </div>
+              </li>
+              <li class="ingredient-item">
+                <span class="ingredient-name">Heavy Cream</span>
+                <div>
+                  <span class="ingredient-amount" data-base-qty="1" data-unit="cup">1 cup</span>
+                  <button class="btn-ai-sub" onclick="triggerAiSub('Heavy Cream', 'Creamy Tuscan Garlic Chicken')">🪄 AI Sub</button>
+                </div>
+              </li>
+              <li class="ingredient-item">
+                <span class="ingredient-name">Sun-Dried Tomatoes</span>
+                <div>
+                  <span class="ingredient-amount" data-base-qty="0.5" data-unit="cup">0.5 cup</span>
+                  <button class="btn-ai-sub" onclick="triggerAiSub('Sun-Dried Tomatoes', 'Creamy Tuscan Garlic Chicken')">🪄 AI Sub</button>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recipe Card 3 (AI Custom Dish Placeholder) -->
+      <div class="recipe-card" data-recipe-id="recipe-003" data-base-servings="1">
+        <div class="card-media">
+          <div class="ai-image-placeholder" id="placeholder-recipe-3">
+            <span class="material-symbols-outlined" style="font-size: 2.5rem; color: #ec4899;">auto_awesome</span>
+            <span style="font-size: 0.9rem; color: var(--text-secondary);">Custom AI Recipe Created</span>
+            <button class="btn-gen-ai-img" onclick="triggerAiImage('Berry Almond Power Oatmeal', 'placeholder-recipe-3')">
+              <span>✨ Generate AI Dish Presentation</span>
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="recipe-tags">
+              <span class="tag vegan">Vegan</span>
+              <span class="tag keto">Superfood</span>
+            </div>
+            <h2 class="recipe-title">Berry Almond Power Oatmeal</h2>
+            <p class="recipe-desc">Steel-cut oats simmered in almond milk, crowned with fresh blueberries, toasted almonds, and chia seeds.</p>
+          </div>
+
+          <!-- Metadata Row -->
+          <div class="meta-row">
+            <div class="meta-item">
+              <span class="material-symbols-outlined">timer</span>
+              <span>10 mins</span>
+            </div>
+            <div class="meta-item">
+              <span class="material-symbols-outlined">local_fire_department</span>
+              <span class="calorie-display" data-base-cal="290">290 kcal / serving</span>
+            </div>
+          </div>
+
+          <!-- Macros Widget -->
+          <div class="macros-widget">
+            <div class="macros-header">
+              <span>Macronutrient Profile</span>
+              <span>290 kcal</span>
+            </div>
+            <div class="macros-bars">
+              <div class="macro-item">
+                <div class="macro-label"><span>Protein</span><span>10g</span></div>
+                <div class="macro-bar-bg"><div class="macro-bar-fill fill-protein" style="width: 35%;"></div></div>
+              </div>
+              <div class="macro-item">
+                <div class="macro-label"><span>Carbs</span><span>42g</span></div>
+                <div class="macro-bar-bg"><div class="macro-bar-fill fill-carbs" style="width: 60%;"></div></div>
+              </div>
+              <div class="macro-item">
+                <div class="macro-label"><span>Fats</span><span>9g</span></div>
+                <div class="macro-bar-bg"><div class="macro-bar-fill fill-fats" style="width: 30%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ingredients & Dynamic Scaler -->
+          <div class="ingredients-section">
+            <div class="ingredients-header">
+              <span class="ingredients-title">Ingredients</span>
+              <div class="scaler-control">
+                <button class="btn-scale btn-minus" title="Decrease Servings">-</button>
+                <span class="servings-count">1 Serving</span>
+                <button class="btn-scale btn-plus" title="Increase Servings">+</button>
+              </div>
+            </div>
+            <ul class="ingredient-list">
+              <li class="ingredient-item">
+                <span class="ingredient-name">Rolled Oats</span>
+                <div>
+                  <span class="ingredient-amount" data-base-qty="0.5" data-unit="cup">0.5 cup</span>
+                  <button class="btn-ai-sub" onclick="triggerAiSub('Rolled Oats', 'Berry Almond Power Oatmeal')">🪄 AI Sub</button>
+                </div>
+              </li>
+              <li class="ingredient-item">
+                <span class="ingredient-name">Almond Milk</span>
+                <div>
+                  <span class="ingredient-amount" data-base-qty="1" data-unit="cup">1 cup</span>
+                  <button class="btn-ai-sub" onclick="triggerAiSub('Almond Milk', 'Berry Almond Power Oatmeal')">🪄 AI Sub</button>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Overlay -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+
+  <!-- Collapsible AI Concierge Side Drawer -->
+  <aside class="concierge-drawer" id="conciergeDrawer">
+    <div class="drawer-header">
+      <div class="drawer-title-group">
+        <span class="material-symbols-outlined" style="color: #818cf8;">smart_toy</span>
+        <span class="drawer-title">AI Recipe Concierge</span>
+        <span class="status-badge"><span class="status-dot"></span>Online</span>
+      </div>
+      <button class="btn-close-drawer" id="btnCloseDrawer" title="Close Drawer">✕</button>
+    </div>
+
+    <!-- Chat Message Log -->
+    <div id="log">
+      <div class="msg agent">
+        <div class="bubble">Hello! I'm your AI Recipe Concierge. I can help scale recipes, search our database, check ingredients, or generate dish photos! How can I assist you today?</div>
+      </div>
+    </div>
+
+    <!-- Memory Hub (Pills display user context) -->
+    <div class="memory-hub">
+      <div class="memory-hub-title">
+        <span class="material-symbols-outlined" style="font-size: 1rem; color: #a5b4fc;">psychology</span>
+        <span>Memory Hub (Active Context)</span>
+      </div>
+      <div class="memory-pills" id="memoryPills">
+        <span class="memory-pill active" onclick="toggleMemory(this)">👤 Family of 4</span>
+        <span class="memory-pill active" onclick="toggleMemory(this)">🚫 Gluten-Free</span>
+        <span class="memory-pill active" onclick="toggleMemory(this)">🥜 Peanut Allergy</span>
+        <button class="btn-add-memory" onclick="addCustomMemory()">+ Add Preference</button>
+      </div>
+    </div>
+
+    <!-- Drawer Footer Input -->
+    <div class="drawer-footer">
+      <form id="form">
+        <input id="input" placeholder="Ask your AI Concierge…" autocomplete="off" autofocus>
+        <button type="submit" id="btnSend">
+          <span class="material-symbols-outlined">send</span>
+        </button>
+      </form>
+    </div>
+  </aside>
+</div>
+
+<script>
+const log = document.getElementById("log");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const conciergeDrawer = document.getElementById("conciergeDrawer");
+const drawerOverlay = document.getElementById("drawerOverlay");
+const btnToggleConcierge = document.getElementById("btnToggleConcierge");
+const btnCloseDrawer = document.getElementById("btnCloseDrawer");
+
+// --- Drawer Toggle Handlers ---
+function openDrawer() {
+  conciergeDrawer.classList.add("open");
+  drawerOverlay.classList.add("open");
+}
+function closeDrawer() {
+  conciergeDrawer.classList.remove("open");
+  drawerOverlay.classList.remove("open");
+}
+btnToggleConcierge.addEventListener("click", openDrawer);
+btnCloseDrawer.addEventListener("click", closeDrawer);
+drawerOverlay.addEventListener("click", closeDrawer);
+
+// --- Memory Hub Handlers ---
+function toggleMemory(pill) {
+  pill.classList.toggle("active");
+  const action = pill.classList.contains("active") ? "enabled" : "disabled";
+  console.log(`Memory preference '${pill.textContent}' ${action}`);
+}
+
+function addCustomMemory() {
+  const pref = prompt("Enter a new dietary constraint or preference to store in Memory:");
+  if (pref && pref.trim()) {
+    const container = document.getElementById("memoryPills");
+    const newPill = document.createElement("span");
+    newPill.className = "memory-pill active";
+    newPill.textContent = "✨ " + pref.trim();
+    newPill.onclick = function() { toggleMemory(this); };
+    container.insertBefore(newPill, container.lastElementChild);
+    
+    // Automatically notify concierge in chat
+    sendMessageToAgent(`Note for Memory: Remember that my diet preferences include: ${pref.trim()}`);
+  }
+}
+
+// --- Dynamic Recipe Scaler ---
+document.querySelectorAll(".recipe-card").forEach(card => {
+  const baseServings = parseFloat(card.dataset.baseServings) || 4;
+  let currentServings = baseServings;
+  
+  const servingsDisplay = card.querySelector(".servings-count");
+  const minusBtn = card.querySelector(".btn-minus");
+  const plusBtn = card.querySelector(".btn-plus");
+  const ingredientItems = card.querySelectorAll(".ingredient-amount");
+
+  function updateServings(newServings) {
+    if (newServings < 1) return;
+    currentServings = newServings;
+    servingsDisplay.textContent = `${currentServings} Serving${currentServings > 1 ? 's' : ''}`;
+    
+    const ratio = currentServings / baseServings;
+
+    ingredientItems.forEach(item => {
+      const baseQty = parseFloat(item.dataset.baseQty);
+      const unit = item.dataset.unit || "";
+      if (!isNaN(baseQty)) {
+        const scaledQty = (baseQty * ratio).toFixed(1).replace(/\.0$/, '');
+        item.textContent = `${scaledQty} ${unit}`;
+      }
+    });
+  }
+
+  if (minusBtn) minusBtn.addEventListener("click", () => updateServings(currentServings - 1));
+  if (plusBtn) plusBtn.addEventListener("click", () => updateServings(currentServings + 1));
+});
+
+// --- Contextual AI Substitute Trigger ---
+function triggerAiSub(ingredientName, recipeTitle) {
+  openDrawer();
+  const promptText = `What is a healthy dietary substitute for ${ingredientName} in ${recipeTitle}?`;
+  input.value = promptText;
+  sendMessageToAgent(promptText);
+}
+
+// --- AI Image Placeholder Trigger ---
+async function triggerAiImage(recipeTitle, containerId) {
+  openDrawer();
+  const promptText = `Generate a dish presentation image for ${recipeTitle}`;
+  const container = document.getElementById(containerId);
+  if (container) {
+    container.innerHTML = `<span class="material-symbols-outlined" style="font-size: 2rem; color: #ec4899; animation: spin 1s infinite linear;">sync</span><span style="font-size:0.85rem; color: #a5b4fc;">Generating AI Dish Presentation...</span>`;
+  }
+  sendMessageToAgent(promptText);
+}
+
+// Helper DOM functions
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+function bubble(who) {
+  const m = el("div", "msg " + who);
+  const b = el("div", "bubble");
+  m.appendChild(b); log.appendChild(m); log.scrollTop = log.scrollHeight;
+  return b;
+}
+
+// --- A2UI Mini-Renderer (v0.8 Basic Catalog) ---
+function boundStr(v) {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v.literalString === "string") return v.literalString;
+  return "";
+}
+
+function childIds(props) {
+  const ids = [];
+  if (props && typeof props.child === "string") ids.push(props.child);
+  const ch = props && props.children;
+  if (ch && Array.isArray(ch.explicitList)) for (const c of ch.explicitList) if (typeof c === "string") ids.push(c);
+  return ids;
+}
+
+function iconName(n) { return String(n || "").replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\s+/g, "_").toLowerCase(); }
+
+function buildNode(id, comps, seen) {
+  if (!id || seen.has(id)) return null;
+  seen.add(id);
+  const spec = comps[id];
+  if (!spec || typeof spec !== "object") return null;
+  const type = Object.keys(spec)[0];
+  const props = spec[type] || {};
+  const kids = () => childIds(props).map(cid => buildNode(cid, comps, seen)).filter(Boolean);
+
+  switch (type) {
+    case "Card": {
+      const d = el("div", "a2card"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Column":
+    case "List": {
+      const horizontal = type === "List" && props.direction === "horizontal";
+      const d = el("div", horizontal ? "a2row" : "a2col"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Row": {
+      const d = el("div", "a2row" + (props.distribution === "spaceBetween" ? " between" : ""));
+      kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Text": {
+      const t = el("div", "a2text");
+      const hint = String(props.usageHint || "body").toLowerCase();
+      if (["h1", "h2", "h3", "h4", "h5", "h6"].includes(hint)) t.classList.add("a2-" + hint);
+      else if (hint === "caption") t.classList.add("a2-caption");
+      t.textContent = boundStr(props.text);
+      return t;
+    }
+    case "Divider":
+      return el("hr", "a2divider");
+    case "Image": {
+      const src = boundStr(props.url || props.src);
+      if (!/^https?:\/\//i.test(src) && !/^\/?images\//i.test(src)) return null;
+      const img = el("img", "a2img"); img.src = src; img.alt = boundStr(props.alt) || ""; return img;
+    }
+    case "Icon": {
+      const s = el("span", "material-symbols-outlined"); s.textContent = iconName(boundStr(props.name) || props.name); return s;
+    }
+    default:
+      return null;
+  }
+}
+
+function renderSurface(messages, container) {
+  const comps = {};
+  const roots = [];
+  for (const m of messages) {
+    if (m.beginRendering && typeof m.beginRendering.root === "string") roots.push(m.beginRendering.root);
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.id && c.component) comps[c.id] = c.component;
+  }
+  let rootIds = roots.filter(r => comps[r]);
+  if (rootIds.length === 0) {
+    const referenced = new Set();
+    for (const id in comps) { const spec = comps[id]; childIds(spec[Object.keys(spec)[0]] || {}).forEach(c => referenced.add(c)); }
+    rootIds = Object.keys(comps).filter(id => !referenced.has(id));
+  }
+  let drew = false;
+  for (const rid of rootIds) { const node = buildNode(rid, comps, new Set()); if (node) { container.appendChild(node); drew = true; } }
+  return drew;
+}
+
+function flattenText(messages) {
+  const out = [];
+  for (const m of messages) {
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.component && c.component.Text) out.push(boundStr(c.component.Text.text));
+  }
+  return out.join("\n").trim();
+}
+
+function renderReply(b, parts) {
+  b.textContent = "";
+  const texts = parts.filter(p => p && (p.kind === "text" || (!p.kind && p.text))).map(p => p.text || "");
+  const a2ui = parts.filter(p => p && p.kind === "a2ui" && p.data).map(p => p.data);
+
+  const textStr = texts.join("\n").trim();
+  if (textStr) b.appendChild(el("div", null, textStr));
+
+  if (a2ui.length) {
+    b.classList.add("rich");
+    if (!renderSurface(a2ui, b)) b.appendChild(el("div", null, flattenText(a2ui) || "(no card content)"));
+  }
+  if (!b.childNodes.length) b.textContent = "(no response)";
+  log.scrollTop = log.scrollHeight;
+}
+
+async function sendMessageToAgent(text) {
+  bubble("user").textContent = text;
+  input.value = "";
+  const b = bubble("agent"); b.textContent = "…";
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error(`Server returned non-JSON (HTTP ${res.status}). ${raw.slice(0, 300)}`); }
+    renderReply(b, data.parts || []);
+  } catch (e) {
+    b.textContent = "Error: " + e.message;
+  }
+}
+
+form.addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
+  sendMessageToAgent(text);
+});
+</script>
+</body>
+</html>
